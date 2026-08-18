@@ -34,7 +34,16 @@ public class WebViewFlutterPlugin: NSObject, FlutterPlugin {
       registrar.addSceneDelegate(plugin)
     #endif
 
-    registrar.register(viewFactory, withId: "plugins.flutter.io/webview")
+    #if os(iOS)
+      // iOS 26 leaves the platform view's gesture recognizers stuck in a stale
+      // state under the default Eager policy, so the web view stops receiving
+      // touches. See https://github.com/flutter/flutter/issues/175099.
+      registrar.register(
+        viewFactory, withId: "plugins.flutter.io/webview",
+        gestureRecognizersBlockingPolicy: .doNotBlockGesture)
+    #else
+      registrar.register(viewFactory, withId: "plugins.flutter.io/webview")
+    #endif
     registrar.publish(plugin)
   }
 
