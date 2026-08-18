@@ -40,7 +40,8 @@ public class WebViewFlutterPlugin: NSObject, FlutterPlugin {
       // touches. See https://github.com/flutter/flutter/issues/175099.
       registrar.register(
         viewFactory, withId: "plugins.flutter.io/webview",
-        gestureRecognizersBlockingPolicy: .doNotBlockGesture)
+        gestureRecognizersBlockingPolicy:
+          FlutterPlatformViewGestureRecognizersBlockingPolicyDoNotBlockGesture)
     #else
       registrar.register(viewFactory, withId: "plugins.flutter.io/webview")
     #endif
