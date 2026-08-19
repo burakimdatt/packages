@@ -11,6 +11,27 @@ so you do not need to add it to your `pubspec.yaml`.
 However, if you `import` this package to use any of its APIs directly, you
 should add it to your `pubspec.yaml` as usual.
 
+### Gesture blocking policy
+
+By default the plugin lets the engine block the web view's gesture recognizers through Flutter's
+gesture arena. If a web view stops responding to touches after the first interaction, the arena
+state has been stranded (see [flutter/flutter#175099][3]). Deriving the blocking decision from hit
+testing instead avoids that state:
+
+<?code-excerpt "example/lib/readme_excerpts.dart (gesture_blocking_policy_example)"?>
+```dart
+final params = WebKitWebViewWidgetCreationParams(
+  controller: controller,
+  gestureBlockingPolicy: UiKitViewGestureBlockingPolicy.doNotBlockGesture,
+);
+```
+
+Pass those parameters to `WebViewWidget.fromPlatformCreationParams`, using the `platform` of your
+`WebViewController` as the `controller`.
+
+This is a workaround for bugs in the underlying `WKWebView`, and it may cause the web view to
+recognize a gesture that should have been blocked, so only opt in when a web view is affected.
+
 ### External Native API
 
 The plugin also provides a native API accessible by the native code of iOS applications or packages.
@@ -35,3 +56,4 @@ For information on contributing to this plugin, see [`CONTRIBUTING.md`](CONTRIBU
 
 [1]: https://pub.dev/packages/webview_flutter
 [2]: https://flutter.dev/to/endorsed-federated-plugin
+[3]: https://github.com/flutter/flutter/issues/175099

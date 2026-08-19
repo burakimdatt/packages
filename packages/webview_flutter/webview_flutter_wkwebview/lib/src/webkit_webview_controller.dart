@@ -953,6 +953,7 @@ class WebKitWebViewWidgetCreationParams extends PlatformWebViewWidgetCreationPar
     required super.controller,
     super.layoutDirection,
     super.gestureRecognizers,
+    this.gestureBlockingPolicy = UiKitViewGestureBlockingPolicy.fallbackToPluginDefault,
   });
 
   /// Constructs a [WebKitWebViewWidgetCreationParams] using a
@@ -966,14 +967,40 @@ class WebKitWebViewWidgetCreationParams extends PlatformWebViewWidgetCreationPar
         gestureRecognizers: params.gestureRecognizers,
       );
 
+  /// How the gesture recognizers of the underlying `WKWebView` are blocked by
+  /// Flutter.
+  ///
+  /// This is only used on iOS; the value is ignored on macOS.
+  ///
+  /// Defaults to [UiKitViewGestureBlockingPolicy.fallbackToPluginDefault],
+  /// which uses the policy the plugin registers the platform view with.
+  ///
+  /// [UiKitViewGestureBlockingPolicy.eager], the policy the plugin registers,
+  /// blocks the web view's gesture recognizers through Flutter's gesture
+  /// arena, which is stateful. When that state is stranded the web view stops
+  /// responding to touches for the rest of its lifetime. Setting this to
+  /// [UiKitViewGestureBlockingPolicy.doNotBlockGesture] derives the same
+  /// blocking decision from hit testing instead, so there is no arena state to
+  /// strand, at the cost of the web view potentially recognizing a gesture
+  /// that should have been blocked.
+  ///
+  /// See also:
+  ///
+  ///  * https://github.com/flutter/flutter/issues/175099, which tracks the
+  ///    stranded gesture recognizer state.
+  ///  * https://github.com/flutter/flutter/issues/179907, which describes why
+  ///    the engine no longer recovers from it on iOS 26 and above.
+  final UiKitViewGestureBlockingPolicy gestureBlockingPolicy;
+
   @override
-  int get hashCode => Object.hash(controller, layoutDirection);
+  int get hashCode => Object.hash(controller, layoutDirection, gestureBlockingPolicy);
 
   @override
   bool operator ==(Object other) {
     return other is WebKitWebViewWidgetCreationParams &&
         controller == other.controller &&
-        layoutDirection == other.layoutDirection;
+        layoutDirection == other.layoutDirection &&
+        gestureBlockingPolicy == other.gestureBlockingPolicy;
   }
 }
 
@@ -1013,6 +1040,7 @@ class WebKitWebViewWidget extends PlatformWebViewWidget {
       return UiKitView(
         key: key,
         viewType: 'plugins.flutter.io/webview',
+        gestureBlockingPolicy: _webKitParams.gestureBlockingPolicy,
         onPlatformViewCreated: (_) {},
         layoutDirection: params.layoutDirection,
         gestureRecognizers: params.gestureRecognizers,
